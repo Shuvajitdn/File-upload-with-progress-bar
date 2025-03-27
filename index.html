@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload with Progress Bar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        #upload-container {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            cursor: pointer;
+            background-color: #f9f9f9;
+        }
+        .progress-container {
+            margin-top: 10px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #ddd;
+            position: relative;
+            margin-top: 5px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            width: 0%;
+            background-color: #4CAF50;
+            transition: width 0.2s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <h2>Upload Files with Progress Bar</h2>
+    <div id="upload-container">Click or Drag & Drop Files Here</div>
+    <input type="file" id="file-input" multiple hidden>
+    <div id="progress-section"></div>
+    
+    <script>
+        const uploadContainer = document.getElementById("upload-container");
+        const fileInput = document.getElementById("file-input");
+        const progressSection = document.getElementById("progress-section");
+        
+        uploadContainer.addEventListener("click", () => fileInput.click());
+        uploadContainer.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            uploadContainer.style.backgroundColor = "#e0e0e0";
+        });
+        uploadContainer.addEventListener("dragleave", () => uploadContainer.style.backgroundColor = "#f9f9f9");
+        uploadContainer.addEventListener("drop", (e) => {
+            e.preventDefault();
+            uploadContainer.style.backgroundColor = "#f9f9f9";
+            handleFiles(e.dataTransfer.files);
+        });
+        
+        fileInput.addEventListener("change", () => handleFiles(fileInput.files));
+        
+        function handleFiles(files) {
+            Array.from(files).forEach(uploadFile);
+        }
+        
+        function uploadFile(file) {
+            const formData = new FormData();
+            formData.append("file", file);
+            
+            const progressContainer = document.createElement("div");
+            progressContainer.classList.add("progress-container");
+            progressContainer.innerHTML = `<p>${file.name}</p><div class='progress-bar'><div class='progress'></div></div>`;
+            progressSection.appendChild(progressContainer);
+            
+            const progressBar = progressContainer.querySelector(".progress");
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", "/upload", true);
+            
+            xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                    const percent = (e.loaded / e.total) * 100;
+                    progressBar.style.width = `${percent}%`;
+                }
+            };
+            
+            xhr.onload = () => {
+                if (xhr.status === 200) {
+                    progressBar.style.backgroundColor = "#28a745"; // Green on success
+                } else {
+                    progressBar.style.backgroundColor = "#dc3545"; // Red on error
+                }
+            };
+            
+            xhr.send(formData);
+        }
+    </script>
+</body>
+</html>
